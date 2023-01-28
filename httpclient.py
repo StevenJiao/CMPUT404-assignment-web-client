@@ -89,7 +89,7 @@ class HTTPClient(object):
 
         # get the code and body
         code = self.get_code(resp)
-        body = resp #self.get_body(resp)
+        body = self.get_body(resp)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
