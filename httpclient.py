@@ -119,6 +119,8 @@ class HTTPClient(object):
         # wait for a response
         resp = self.recvall(self.socket)
 
+        self.close()
+
         # get the code and body
         code = self.get_code(resp)
         body = self.get_body(resp)
@@ -150,6 +152,8 @@ class HTTPClient(object):
 
         # wait for a response
         resp = self.recvall(self.socket)
+
+        self.close()
 
         # get the code and body
         code = self.get_code(resp)
