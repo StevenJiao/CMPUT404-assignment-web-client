@@ -113,7 +113,8 @@ class HTTPClient(object):
 
         # send our GET request
         req = f"GET {new_url_path} HTTP/1.1\r\n" \
-                f"Host: {parsedUrl.hostname}\r\n\r\n"
+                f"Host: {parsedUrl.hostname}\r\n" \
+                "Connection: close\r\n\r\n"
         self.sendall(req)
 
         # wait for a response
