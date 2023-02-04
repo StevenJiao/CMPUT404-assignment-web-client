@@ -61,6 +61,30 @@ class HTTPClient(object):
     def close(self):
         self.socket.close()
 
+    def append_args(self, url: str, args: dict) -> str:
+        # append a ? to signify arguments if there isn't already any
+        url = (url + '?') if ('?' not in url) else url
+
+        # iterate through the keys and add the arguments 
+        for i, arg in enumerate(args.keys()):
+            url += arg + "=" + args[arg]
+
+            # Add an & if we're not at the last arg yet
+            if i < len(args) - 1:
+                url += '&'
+        
+        return url
+
+    def convert_query_to_args(self, args: dict, query: str):
+        args = {} if not args else args
+
+        query_split = query.split("&")
+        for key_val in query_split:
+            key_val_split = key_val.split('=')
+            args[key_val_split[0]] = key_val_split[1]
+        return args
+        
+
     # read everything from the socket
     def recvall(self, sock):
         buffer = bytearray()
@@ -80,8 +104,16 @@ class HTTPClient(object):
         # connect to the server
         self.connect(parsedUrl.hostname, parsedUrl.port if parsedUrl.port else 80)
 
+        # check that path has something and also add the query if the url came with any
+        new_url_path = '/' if not parsedUrl.path else parsedUrl.path
+        new_url_path = new_url_path + '?' + parsedUrl.query if parsedUrl.query else new_url_path
+
+        # add arguments if there are any
+        new_url_path = self.append_args(new_url_path, args) if args else new_url_path
+
         # send our GET request
-        req = f"GET {parsedUrl.path} HTTP/1.1\r\nHost: {parsedUrl.hostname}\r\n\r\n"
+        req = f"GET {new_url_path} HTTP/1.1\r\n" \
+                f"Host: {parsedUrl.hostname}\r\n\r\n"
         self.sendall(req)
 
         # wait for a response
@@ -99,11 +131,21 @@ class HTTPClient(object):
         # connect to the server
         self.connect(parsedUrl.hostname, parsedUrl.port if parsedUrl.port else 80)
 
+        # check if we have anything in the url path
+        new_url_path = '/' if not parsedUrl.path else parsedUrl.path
+
+        # add the original URL arguments to our args if there was any
+        args = self.convert_query_to_args(args, parsedUrl.query) if parsedUrl.query else args
+
         # URL encode our args
         data = urllib.parse.urlencode(args) if args else None
 
         # send our full POST request with body of urlencoded args
-        req = f"POST {parsedUrl.path} HTTP/1.1\r\nHost: {parsedUrl.hostname}\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: {len(data) if data else 0}\r\n\r\n{data}"
+        req = f"POST {new_url_path} HTTP/1.1\r\n" \
+                f"Host: {parsedUrl.hostname}\r\n" \
+                "Content-Type: application/x-www-form-urlencoded\r\n" \
+                f"Content-Length: {len(data) if data else 0}\r\n" \
+                f"\r\n{data}"
         self.sendall(req)
 
         # wait for a response
