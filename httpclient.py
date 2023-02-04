@@ -148,7 +148,8 @@ class HTTPClient(object):
                 f"Host: {parsedUrl.hostname}\r\n" \
                 "Content-Type: application/x-www-form-urlencoded\r\n" \
                 f"Content-Length: {len(data) if data else 0}\r\n" \
-                f"\r\n{data}"
+                "Connection: close\r\n\r\n" \
+                f"{data}"
         self.sendall(req)
 
         # wait for a response
