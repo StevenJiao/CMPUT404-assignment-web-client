@@ -81,7 +81,7 @@ class HTTPClient(object):
         query_split = query.split("&")
         for key_val in query_split:
             key_val_split = key_val.split('=')
-            args[key_val_split[0]] = key_val_split[1]
+            args[key_val_split[0]] = key_val_split[1] if len(key_val_split) == 2 else None
         return args
         
 
@@ -106,17 +106,18 @@ class HTTPClient(object):
 
         # check that path has something and also add the query if the url came with any
         new_url_path = '/' if not parsedUrl.path else parsedUrl.path
-        # new_url_path = new_url_path + '?' + parsedUrl.query if parsedUrl.query else new_url_path
-        
-        # add the original URL arguments to our args if there was any
-        args = self.convert_query_to_args(args, parsedUrl.query) if parsedUrl.query else args
 
-        # add arguments if there are any
-        new_url_path = self.append_args(new_url_path, args) if args else new_url_path
+        # build our query with the parsed url query and args
+        new_query = parsedUrl.query
+        new_query = new_query + '&' + urllib.parse.urlencode(args) if args else new_query
+        
+        # make our new url path
+        new_url_path = new_url_path + '?' + new_query if new_query else new_url_path
 
         # send our GET request
         req = f"GET {new_url_path} HTTP/1.1\r\n" \
                 f"Host: {parsedUrl.hostname}\r\n" \
+                "User-Agent: Rebecca Purple\r\n" \
                 "Connection: close\r\n\r\n"
         self.sendall(req)
 
@@ -151,6 +152,7 @@ class HTTPClient(object):
                 f"Host: {parsedUrl.hostname}\r\n" \
                 "Content-Type: application/x-www-form-urlencoded\r\n" \
                 f"Content-Length: {len(data) if data else 0}\r\n" \
+                "User-Agent: Rebecca Purple\r\n" \
                 "Connection: close\r\n\r\n" \
                 f"{data}"
         self.sendall(req)
