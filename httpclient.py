@@ -106,7 +106,10 @@ class HTTPClient(object):
 
         # check that path has something and also add the query if the url came with any
         new_url_path = '/' if not parsedUrl.path else parsedUrl.path
-        new_url_path = new_url_path + '?' + parsedUrl.query if parsedUrl.query else new_url_path
+        # new_url_path = new_url_path + '?' + parsedUrl.query if parsedUrl.query else new_url_path
+        
+        # add the original URL arguments to our args if there was any
+        args = self.convert_query_to_args(args, parsedUrl.query) if parsedUrl.query else args
 
         # add arguments if there are any
         new_url_path = self.append_args(new_url_path, args) if args else new_url_path
